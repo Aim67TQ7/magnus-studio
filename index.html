@@ -437,6 +437,25 @@
   }
   .select-btn:hover { background: var(--red-dark); box-shadow: 0 2px 12px var(--red-glow); }
 
+  /* ═══ RECENCY BADGES ═══ */
+  .recency-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 3px;
+    white-space: nowrap;
+  }
+  .recency-badge.breaking {
+    background: rgba(0,196,140,0.15);
+    color: var(--success);
+    border: 1px solid rgba(0,196,140,0.25);
+  }
+  .recency-badge.recent {
+    background: rgba(91,134,229,0.1);
+    color: var(--blue);
+    border: 1px solid rgba(91,134,229,0.2);
+  }
+
   /* ═══ SOURCES ═══ */
   .sources-block {
     margin: 10px 0 4px;
@@ -1545,10 +1564,19 @@ function renderSummaries() {
           <div class="sources-label">No sources provided \u2014 do not use without verification</div>
         </div>`;
 
+    const recencyBadge = s.recency === 'breaking'
+      ? '<span class="recency-badge breaking">Last 7 Days</span>'
+      : s.recency === 'recent'
+        ? '<span class="recency-badge recent">Last 30 Days</span>'
+        : '';
+
     card.innerHTML = `
       <div class="summary-meta">
         <span class="summary-angle">${s.angle || ''}</span>
-        <span class="summary-audience">\u2192 ${s.audience || ''}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${recencyBadge}
+          <span class="summary-audience">\u2192 ${s.audience || ''}</span>
+        </div>
       </div>
       <div class="summary-headline">${s.headline || ''}</div>
       <div class="summary-body">${s.body || ''}</div>

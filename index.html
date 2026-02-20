@@ -437,6 +437,49 @@
   }
   .select-btn:hover { background: var(--red-dark); box-shadow: 0 2px 12px var(--red-glow); }
 
+  /* ═══ SOURCES ═══ */
+  .sources-block {
+    margin: 10px 0 4px;
+    padding: 10px 12px;
+    background: rgba(91,134,229,0.06);
+    border: 1px solid rgba(91,134,229,0.12);
+    border-radius: var(--radius-sm);
+  }
+  .sources-block.sources-missing {
+    background: rgba(255,71,87,0.06);
+    border-color: rgba(255,71,87,0.15);
+  }
+  .sources-missing .sources-label { color: var(--error); }
+
+  .sources-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+
+  .source-item {
+    display: flex; flex-direction: column;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .source-item:last-child { border-bottom: none; }
+
+  .source-link {
+    font-size: 12px; color: var(--blue);
+    text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%;
+    transition: color 0.12s;
+  }
+  .source-link:hover { color: var(--accent); text-decoration: underline; }
+
+  .source-meta {
+    font-size: 10px; color: var(--chrome);
+    margin-top: 1px;
+  }
+
   /* ═══ STAR RATING ═══ */
   .star-rating { display: inline-flex; gap: 2px; }
   .star {
@@ -1486,6 +1529,22 @@ function renderSummaries() {
 
     const tags = (s.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
 
+    const sources = (s.sources || []).map(src =>
+      `<div class="source-item">
+        <a href="${src.url || '#'}" target="_blank" rel="noopener" class="source-link" title="${src.title || ''}">${src.title || 'Source'}</a>
+        <span class="source-meta">${src.publisher || ''}${src.date ? ' \u00b7 ' + src.date : ''}</span>
+      </div>`
+    ).join('');
+
+    const sourcesBlock = sources
+      ? `<div class="sources-block">
+          <div class="sources-label">Sources \u2014 verify before publishing</div>
+          ${sources}
+        </div>`
+      : `<div class="sources-block sources-missing">
+          <div class="sources-label">No sources provided \u2014 do not use without verification</div>
+        </div>`;
+
     card.innerHTML = `
       <div class="summary-meta">
         <span class="summary-angle">${s.angle || ''}</span>
@@ -1493,6 +1552,7 @@ function renderSummaries() {
       </div>
       <div class="summary-headline">${s.headline || ''}</div>
       <div class="summary-body">${s.body || ''}</div>
+      ${sourcesBlock}
       <div class="summary-footer">
         ${tags}
         <div class="summary-actions">

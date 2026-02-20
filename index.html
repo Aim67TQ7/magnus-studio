@@ -825,6 +825,26 @@
   .toast.error { border-left: 3px solid var(--error); }
   .toast.info { border-left: 3px solid var(--blue); }
 
+  /* ═══ CHANGELOG ═══ */
+  .changelog-entry {
+    padding-bottom: 16px; margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .changelog-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .changelog-version {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700; color: var(--white);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .changelog-date {
+    font-size: 11px; font-weight: 400; color: var(--chrome);
+  }
+  .changelog-list {
+    padding-left: 18px; font-size: 13px; color: var(--chrome-light);
+    line-height: 1.8;
+  }
+  .changelog-list li::marker { color: var(--red); }
+
   /* ═══ RESPONSIVE ═══ */
   @media (max-width: 1100px) {
     .article-layout { grid-template-columns: 1fr; }
@@ -846,7 +866,7 @@
     <img src="https://44615192.fs1.hubspotusercontent-na1.net/hubfs/44615192/Website/Logos/MAGNET-APPLICATIONS-2024-v3.svg" class="logo-mark" alt="Magnet Applications" style="height:22px" onerror="this.style.display='none'">
     <div class="logo-divider"></div>
     <div class="header-title">Bunting Press Studio</div>
-    <div class="header-badge">Beta</div>
+    <div class="header-badge" style="cursor:pointer" onclick="document.getElementById('changelogModal').style.display='flex'" title="View changelog">v0.3.1</div>
   </div>
   <div class="header-right">
     <div class="gen-counter">
@@ -1055,6 +1075,60 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- CHANGELOG MODAL -->
+<div id="changelogModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--steel-mid);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);max-width:520px;width:90%;max-height:80vh;overflow-y:auto;padding:0;box-shadow:var(--shadow-lg)">
+    <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--steel-light);z-index:1">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--white)">Revision History</div>
+      <span style="cursor:pointer;color:var(--chrome);font-size:18px" onclick="document.getElementById('changelogModal').style.display='none'">&times;</span>
+    </div>
+    <div style="padding:20px" id="changelogContent">
+      <div class="changelog-entry">
+        <div class="changelog-version">v0.3.1 <span class="changelog-date">2026-02-20</span> <span class="recency-badge breaking" style="font-size:8px">Current</span></div>
+        <ul class="changelog-list">
+          <li>Enforce 30-day recency on all summaries</li>
+          <li>Breaking news (last 7 days) sorted first with green badge</li>
+          <li>Citation sources required on every summary</li>
+          <li>Red warning on summaries with no sources</li>
+        </ul>
+      </div>
+      <div class="changelog-entry">
+        <div class="changelog-version">v0.3.0 <span class="changelog-date">2026-02-20</span></div>
+        <ul class="changelog-list">
+          <li>Rebrand to Bunting Press Studio</li>
+          <li>Bunting Magnetics + Magnet Applications logos in header</li>
+          <li>Auto brand detection on LinkedIn preview (Bunting / Magnet Applications / Bunting UK)</li>
+          <li>LinkedIn preview avatar and author switch by equipment category</li>
+        </ul>
+      </div>
+      <div class="changelog-entry">
+        <div class="changelog-version">v0.2.0 <span class="changelog-date">2026-02-20</span></div>
+        <ul class="changelog-list">
+          <li>Full Supabase integration — articles, prompts, and ratings persist across sessions</li>
+          <li>Three edge functions: generate summaries, write articles, improve prompts (Claude Sonnet)</li>
+          <li>Side-by-side article editor + LinkedIn preview</li>
+          <li>Contenteditable article body with live sync to preview</li>
+          <li>Word count, read time, article status tracking</li>
+          <li>History tab — browse and reload past articles</li>
+          <li>Prompt Lab with version management and AI-powered improvement suggestions</li>
+          <li>Copy as text, markdown, or export HTML</li>
+          <li>Keyboard shortcuts (Ctrl+G generate, Ctrl+E export)</li>
+        </ul>
+      </div>
+      <div class="changelog-entry">
+        <div class="changelog-version">v0.1.0 <span class="changelog-date">2026-02-20</span></div>
+        <ul class="changelog-list">
+          <li>Initial prototype — static HTML with demo data</li>
+          <li>Equipment selector with 199 items across 17 categories</li>
+          <li>Collapsible categories with search filter</li>
+          <li>Typewriter article rendering</li>
+          <li>Prompt Lab with local version management</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ════════════════════════════════════════════════

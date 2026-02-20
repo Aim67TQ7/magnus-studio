@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Magnus | Bunting Content Studio</title>
+<title>Bunting Press Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -783,7 +783,7 @@
     <div class="logo-divider"></div>
     <img src="https://44615192.fs1.hubspotusercontent-na1.net/hubfs/44615192/Website/Logos/MAGNET-APPLICATIONS-2024-v3.svg" class="logo-mark" alt="Magnet Applications" style="height:22px" onerror="this.style.display='none'">
     <div class="logo-divider"></div>
-    <div class="header-title">Magnus Content Studio</div>
+    <div class="header-title">Bunting Press Studio</div>
     <div class="header-badge">Beta</div>
   </div>
   <div class="header-right">
@@ -850,12 +850,12 @@
       <div class="empty-state" id="emptySummaries">
         <div class="empty-icon">M</div>
         <div class="empty-title">Ready to Generate</div>
-        <div class="empty-desc">Select equipment, optionally set a topic, then generate. Magnus will research and return 3-5 article angles.</div>
+        <div class="empty-desc">Select equipment, optionally set a topic, then generate. Press Studio will research and return 3-5 article angles.</div>
       </div>
       <div id="summariesLoading" style="display:none">
         <div class="loading-state">
           <div class="spinner"></div>
-          <div class="loading-text">Magnus analyzing industry landscape...</div>
+          <div class="loading-text">Analyzing industry landscape...</div>
           <div class="loading-steps">
             <div class="loading-step active" id="step1"><span class="step-icon">...</span> Scanning industry news</div>
             <div class="loading-step" id="step2"><span class="step-icon">...</span> Matching equipment angles</div>
@@ -871,7 +871,7 @@
       <div class="empty-state" id="emptyArticle" style="height:100%">
         <div class="empty-icon">A</div>
         <div class="empty-title">Select a Summary</div>
-        <div class="empty-desc">Choose an article angle from the Summaries tab. Magnus will write and preview it here.</div>
+        <div class="empty-desc">Choose an article angle from the Summaries tab. Press Studio will write and preview it here.</div>
       </div>
 
       <div id="articleContainer" style="display:none;height:100%;padding:20px;">
@@ -919,7 +919,7 @@
 
       <div class="loading-state" id="articleLoading" style="display:none">
         <div class="spinner"></div>
-        <div class="loading-text">Magnus writing your article...</div>
+        <div class="loading-text">Writing your article...</div>
         <div class="loading-steps">
           <div class="loading-step active" id="astep1"><span class="step-icon">...</span> Structuring narrative</div>
           <div class="loading-step" id="astep2"><span class="step-icon">...</span> Writing sections</div>
@@ -962,9 +962,9 @@
       <div style="margin-top:20px">
         <div class="section-label" style="margin-bottom:10px">Performance Notes</div>
         <textarea class="topic-input" id="performanceNotes" style="min-height:100px"
-          placeholder="What worked? What didn't? These notes help Magnus improve the prompt..."></textarea>
+          placeholder="What worked? What didn't? These notes inform the next prompt iteration..."></textarea>
         <div style="margin-top:10px">
-          <button class="btn-primary" onclick="improvePrompt()">Ask Magnus to Improve Prompt</button>
+          <button class="btn-primary" onclick="improvePrompt()">Improve Prompt with AI</button>
         </div>
       </div>
 
@@ -1697,7 +1697,7 @@ async function improvePrompt() {
   const currentPrompt = document.getElementById('systemPrompt').value;
   const suggestions = document.getElementById('promptSuggestions');
 
-  suggestions.innerHTML = '<div class="loading-text" style="font-size:12px">Magnus analyzing prompt performance...</div>';
+  suggestions.innerHTML = '<div class="loading-text" style="font-size:12px">Analyzing prompt performance...</div>';
 
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/magnus-improve-prompt`, {

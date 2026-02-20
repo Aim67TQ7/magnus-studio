@@ -79,12 +79,14 @@
   .logo-area { display: flex; align-items: center; gap: 14px; }
 
   .logo-mark {
-    width: 32px; height: 32px;
-    background: var(--red);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900; font-size: 18px; color: white;
+    height: 28px; width: auto;
+    filter: brightness(0) invert(1);
+    object-fit: contain;
+  }
+
+  .logo-divider {
+    width: 1px; height: 24px;
+    background: rgba(255,255,255,0.15);
   }
 
   .header-title {
@@ -541,13 +543,18 @@
   }
 
   .li-avatar {
-    width: 44px; height: 44px;
+    width: 48px; height: 48px;
     border-radius: 50%;
-    background: var(--red);
+    background: #fff;
+    border: 1px solid #e0e0e0;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900; font-size: 16px; color: white;
     flex-shrink: 0;
+    overflow: hidden;
+    padding: 4px;
+  }
+  .li-avatar img {
+    width: 100%; height: 100%;
+    object-fit: contain;
   }
 
   .li-author-info { flex: 1; }
@@ -772,7 +779,10 @@
 <!-- ═══ HEADER ═══ -->
 <header class="header">
   <div class="logo-area">
-    <div class="logo-mark">M</div>
+    <img src="https://46256563.fs1.hubspotusercontent-na1.net/hubfs/46256563/Bunting-Newton-v2.png" class="logo-mark" alt="Bunting" onerror="this.style.display='none'">
+    <div class="logo-divider"></div>
+    <img src="https://44615192.fs1.hubspotusercontent-na1.net/hubfs/44615192/Website/Logos/MAGNET-APPLICATIONS-2024-v3.svg" class="logo-mark" alt="Magnet Applications" style="height:22px" onerror="this.style.display='none'">
+    <div class="logo-divider"></div>
     <div class="header-title">Magnus Content Studio</div>
     <div class="header-badge">Beta</div>
   </div>
@@ -887,10 +897,12 @@
           <!-- LinkedIn Preview -->
           <div class="linkedin-preview">
             <div class="li-header">
-              <div class="li-avatar">B</div>
+              <div class="li-avatar" id="liAvatar">
+                <img id="liAvatarImg" src="https://46256563.fs1.hubspotusercontent-na1.net/hubfs/46256563/Bunting-Newton-v2.png" alt="Bunting">
+              </div>
               <div class="li-author-info">
-                <div class="li-author-name">Bunting Magnetics</div>
-                <div class="li-author-title">Leaders in Magnetic Separation, Metal Detection & Permanent Magnets</div>
+                <div class="li-author-name" id="liAuthorName">Bunting Magnetics</div>
+                <div class="li-author-title" id="liAuthorTitle">Leaders in Magnetic Separation, Metal Detection & Permanent Magnets</div>
                 <div class="li-post-time">Just now</div>
               </div>
             </div>
@@ -1127,6 +1139,70 @@ const EQUIPMENT = {
 // ════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+// BRAND IDENTITY
+// ════════════════════════════════════════════════
+const BRANDS = {
+  bunting: {
+    name: 'Bunting Magnetics',
+    tagline: 'Leaders in Magnetic Separation, Metal Detection & Permanent Magnets',
+    logo: 'https://46256563.fs1.hubspotusercontent-na1.net/hubfs/46256563/Bunting-Newton-v2.png',
+    url: 'https://www.buntingmagnetics.com',
+  },
+  magapp: {
+    name: 'Magnet Applications',
+    tagline: 'Precision Engineered Magnets for Automotive, Motors, Sensors & Beyond',
+    logo: 'https://www.magnetapplications.com/hs-fs/hubfs/Magnet-Applications-Logo_2025.png?width=202&height=73&name=Magnet-Applications-Logo_2025.png',
+    url: 'https://www.magnetapplications.com',
+  },
+  buntingUK: {
+    name: 'Bunting - Redditch',
+    tagline: 'Magnetic Separation, Mineral Processing & Recycling Solutions',
+    logo: 'https://46256563.fs1.hubspotusercontent-na1.net/hubfs/46256563/Bunting-Newton-v2.png',
+    url: 'https://www.bunting-redditch.com',
+  },
+};
+
+const MAGAPP_CATEGORIES = [
+  'Automotive Magnets (Magnet Applications)',
+  'Motors & Drives (Magnet Applications)',
+  'Sensors & Electronics (Magnet Applications)',
+  'Medical & Oil/Gas (Magnet Applications)',
+  'Pumps & Consumer (Magnet Applications)',
+  'Magnetizing Equipment',
+];
+
+const UK_CATEGORIES = [
+  'Bunting UK \u2014 Heavy Industrial',
+  'Bunting UK \u2014 Mineral Processing',
+  'Bunting UK \u2014 Recycling',
+  'Bunting UK \u2014 Magnets & Assemblies',
+];
+
+function detectBrand(equipment) {
+  if (!equipment?.length) return BRANDS.bunting;
+  // Check if majority of equipment maps to Magnet Applications
+  let magAppCount = 0, ukCount = 0;
+  for (const item of equipment) {
+    for (const cat of MAGAPP_CATEGORIES) {
+      if (EQUIPMENT[cat]?.includes(item)) { magAppCount++; break; }
+    }
+    for (const cat of UK_CATEGORIES) {
+      if (EQUIPMENT[cat]?.includes(item)) { ukCount++; break; }
+    }
+  }
+  if (magAppCount > ukCount && magAppCount > equipment.length / 3) return BRANDS.magapp;
+  if (ukCount > magAppCount && ukCount > equipment.length / 3) return BRANDS.buntingUK;
+  return BRANDS.bunting;
+}
+
+function setLinkedInBrand(brand) {
+  document.getElementById('liAvatarImg').src = brand.logo;
+  document.getElementById('liAvatarImg').alt = brand.name;
+  document.getElementById('liAuthorName').textContent = brand.name;
+  document.getElementById('liAuthorTitle').textContent = brand.tagline;
+}
+
 let selectedItems = new Set();
 let summaries = [];
 let selectedSummaryIdx = -1;
@@ -1223,6 +1299,8 @@ async function loadArticleFromHistory(id) {
   if (!data) return;
 
   currentArticleId = data.id;
+  const brand = detectBrand(data.equipment || []);
+  setLinkedInBrand(brand);
   document.getElementById('emptyArticle').style.display = 'none';
   document.getElementById('articleContainer').style.display = 'block';
   document.getElementById('articleLoading').style.display = 'none';
@@ -1443,6 +1521,11 @@ async function selectSummary(idx) {
 
   const s = summaries[idx];
   const prompt = document.getElementById('systemPrompt').value;
+
+  // Set brand based on equipment in this summary
+  const articleEquipment = s.equipment || [...selectedItems];
+  const brand = detectBrand(articleEquipment);
+  setLinkedInBrand(brand);
 
   // Animate steps
   const steps = [

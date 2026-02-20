@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnus | Bunting Content Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --red: #C8102E;
+    --red-dark: #a00d24;
+    --red-glow: rgba(200,16,46,0.25);
+    --steel: #12151f;
+    --steel-mid: #1a1f2e;
+    --steel-light: #242b3d;
+    --steel-hover: #2e3850;
+    --chrome: #7a8ba3;
+    --chrome-light: #b8c7da;
+    --white: #edf2f7;
+    --accent: #FFB800;
+    --accent-dim: rgba(255,184,0,0.12);
+    --success: #00c48c;
+    --success-dim: rgba(0,196,140,0.12);
+    --error: #ff4757;
+    --blue: #5b86e5;
+    --blue-dim: rgba(91,134,229,0.1);
+    --radius: 8px;
+    --radius-sm: 4px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.3);
+    --shadow-lg: 0 12px 48px rgba(0,0,0,0.5);
+    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--steel);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══ SCROLLBAR ═══ */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--steel-hover); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+  /* ═══ ANIMATIONS ═══ */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 8px var(--red-glow); } 50% { box-shadow: 0 0 20px var(--red-glow); } }
+
+  .fade-in { animation: fadeIn 0.4s var(--transition) both; }
+  .slide-in { animation: slideIn 0.3s var(--transition) both; }
+
+  /* ═══ HEADER ═══ */
+  .header {
+    background: linear-gradient(180deg, var(--steel-mid) 0%, var(--steel) 100%);
+    border-bottom: 2px solid var(--red);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+
+  .logo-area { display: flex; align-items: center; gap: 14px; }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--red);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 18px; color: white;
+  }
+
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 17px;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--white);
+  }
+
+  .header-badge {
+    background: var(--red);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; padding: 2px 8px;
+    border-radius: 3px; text-transform: uppercase;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 20px; }
+
+  .gen-counter {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--chrome);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 1px;
+  }
+  .gen-counter strong { color: var(--accent); font-size: 16px; }
+
+  .magnus-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--chrome);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    animation: pulse 2s infinite;
+  }
+
+  /* ═══ LAYOUT ═══ */
+  .layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  /* ═══ SIDEBAR ═══ */
+  .sidebar {
+    background: var(--steel-mid);
+    border-right: 1px solid rgba(255,255,255,0.04);
+    display: flex; flex-direction: column;
+    height: 100%; overflow: hidden;
+  }
+
+  .sidebar-section {
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--chrome);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .section-label .count {
+    font-weight: 400; font-size: 9px;
+    letter-spacing: 0; text-transform: none;
+    color: rgba(122,139,163,0.6);
+  }
+
+  /* ═══ TOPIC INPUT ═══ */
+  .topic-input {
+    width: 100%;
+    background: var(--steel-light);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px; font-weight: 400;
+    padding: 10px 12px;
+    resize: vertical; min-height: 48px;
+    transition: border-color var(--transition);
+    line-height: 1.5;
+  }
+  .topic-input:focus { outline: none; border-color: var(--red); }
+  .topic-input::placeholder { color: rgba(122,139,163,0.6); }
+
+  /* ═══ EQUIPMENT SELECTOR ═══ */
+  .equipment-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .selected-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; color: var(--accent); font-weight: 600;
+  }
+
+  .equip-actions { display: flex; gap: 6px; }
+
+  .equip-action-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    color: var(--chrome); border-radius: 3px;
+    padding: 2px 8px; font-size: 10px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px; transition: all var(--transition);
+  }
+  .equip-action-btn:hover { color: var(--white); border-color: var(--chrome); }
+
+  .search-input {
+    width: 100%;
+    background: var(--steel-light);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px; padding: 7px 10px;
+    margin-bottom: 8px;
+  }
+  .search-input:focus { outline: none; border-color: var(--chrome); }
+  .search-input::placeholder { color: rgba(122,139,163,0.5); }
+
+  .equipment-list {
+    overflow-y: auto; flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--steel-hover) transparent;
+  }
+
+  .category-group { margin-bottom: 2px; }
+
+  .category-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 4px;
+    cursor: pointer; user-select: none;
+    border-bottom: 1px solid rgba(200,16,46,0.15);
+    transition: background var(--transition);
+  }
+  .category-header:hover { background: rgba(255,255,255,0.02); }
+
+  .category-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--red);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .category-count {
+    font-size: 9px; color: var(--chrome);
+    font-weight: 400; letter-spacing: 0;
+  }
+
+  .category-chevron {
+    font-size: 10px; color: var(--chrome);
+    transition: transform var(--transition);
+  }
+  .category-group.collapsed .category-chevron { transform: rotate(-90deg); }
+  .category-group.collapsed .category-items { display: none; }
+
+  .category-actions {
+    display: flex; gap: 4px; margin-right: 4px;
+  }
+  .cat-sel-btn {
+    background: none; border: none; color: var(--chrome);
+    font-size: 9px; cursor: pointer; padding: 0 2px;
+    font-family: 'Barlow Condensed', sans-serif;
+    opacity: 0; transition: opacity var(--transition);
+  }
+  .category-header:hover .cat-sel-btn { opacity: 1; }
+  .cat-sel-btn:hover { color: var(--white); }
+
+  .equip-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 4px 6px; border-radius: 3px;
+    cursor: pointer; transition: background 0.12s;
+    font-size: 11.5px; line-height: 1.3; color: var(--chrome-light);
+  }
+  .equip-item:hover { background: rgba(255,255,255,0.04); }
+  .equip-item.selected { background: rgba(200,16,46,0.08); color: var(--white); }
+
+  .equip-cb {
+    width: 13px; height: 13px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 2px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .equip-item.selected .equip-cb {
+    background: var(--red); border-color: var(--red);
+  }
+  .equip-item.selected .equip-cb::after {
+    content: '\2713'; font-size: 8px; color: white; font-weight: 700;
+  }
+
+  /* ═══ GENERATE BUTTON ═══ */
+  .generate-section {
+    padding: 14px 18px;
+    background: linear-gradient(180deg, var(--steel-mid) 0%, rgba(200,16,46,0.04) 100%);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: auto;
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+    color: white; border: none;
+    border-radius: var(--radius);
+    padding: 13px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .btn-primary:hover { box-shadow: 0 4px 20px var(--red-glow); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0) scale(0.99); }
+  .btn-primary:disabled { background: var(--steel-hover); cursor: not-allowed; box-shadow: none; transform: none; }
+  .btn-primary.generating { animation: glow 1.5s ease infinite; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--chrome-light);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all var(--transition);
+  }
+  .btn-secondary:hover { border-color: var(--chrome); color: var(--white); background: rgba(255,255,255,0.03); }
+
+  /* ═══ MAIN ═══ */
+  .main { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+  /* ═══ TABS ═══ */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 28px;
+    background: var(--steel-mid);
+  }
+
+  .tab {
+    padding: 14px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--chrome); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all var(--transition);
+    position: relative;
+  }
+  .tab.active { color: var(--white); border-bottom-color: var(--red); }
+  .tab:hover:not(.active) { color: var(--chrome-light); }
+
+  .tab-badge {
+    position: absolute; top: 8px; right: 4px;
+    background: var(--red); color: white;
+    font-size: 9px; padding: 1px 5px;
+    border-radius: 8px; font-weight: 700;
+  }
+
+  /* ═══ CONTENT ═══ */
+  .content {
+    flex: 1; overflow-y: auto; padding: 24px 28px;
+  }
+
+  /* ═══ SUMMARIES ═══ */
+  .summaries-grid { display: flex; flex-direction: column; gap: 14px; }
+
+  .summary-card {
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .summary-card::before {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--steel-hover); transition: background var(--transition);
+  }
+  .summary-card:hover { border-color: rgba(200,16,46,0.2); transform: translateX(2px); }
+  .summary-card:hover::before { background: var(--red); }
+  .summary-card.selected { border-color: var(--red); background: rgba(200,16,46,0.04); }
+  .summary-card.selected::before { background: var(--red); }
+
+  .summary-meta {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 8px;
+  }
+
+  .summary-angle {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .summary-audience { font-size: 11px; color: var(--chrome); }
+
+  .summary-headline {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 19px; font-weight: 700;
+    color: var(--white); margin-bottom: 6px;
+    line-height: 1.2;
+  }
+
+  .summary-body {
+    font-size: 13px; color: var(--chrome-light);
+    line-height: 1.6; margin-bottom: 12px;
+  }
+
+  .summary-footer {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  }
+
+  .tag {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 2px; padding: 2px 7px;
+    font-size: 10px; color: var(--chrome);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.8px; text-transform: uppercase;
+  }
+
+  .summary-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+
+  .select-btn {
+    background: var(--red); color: white;
+    border: none; border-radius: var(--radius-sm);
+    padding: 5px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all var(--transition);
+  }
+  .select-btn:hover { background: var(--red-dark); box-shadow: 0 2px 12px var(--red-glow); }
+
+  /* ═══ STAR RATING ═══ */
+  .star-rating { display: inline-flex; gap: 2px; }
+  .star {
+    cursor: pointer; font-size: 16px;
+    color: var(--steel-hover);
+    transition: color 0.12s;
+    line-height: 1;
+  }
+  .star:hover, .star.active { color: var(--accent); }
+  .star-rating:hover .star { color: var(--steel-hover); }
+  .star-rating:hover .star:hover, .star-rating:hover .star:hover ~ .star-reverse { color: var(--accent); }
+
+  /* ═══ ARTICLE PANEL ═══ */
+  .article-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: 100%; }
+
+  .article-editor {
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .article-toolbar {
+    background: var(--steel-light);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 10px 18px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .article-toolbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--chrome);
+  }
+
+  .toolbar-actions { display: flex; gap: 6px; align-items: center; }
+
+  .article-stats {
+    display: flex; gap: 12px;
+    font-size: 11px; color: var(--chrome);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+    padding: 6px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    background: rgba(0,0,0,0.1);
+  }
+  .article-stats span strong { color: var(--chrome-light); }
+
+  .article-body {
+    padding: 24px;
+    overflow-y: auto; flex: 1;
+  }
+
+  .article-content {
+    font-size: 14px; line-height: 1.8;
+    color: var(--chrome-light);
+    outline: none;
+  }
+  .article-content h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px; font-weight: 900;
+    color: var(--white); margin-bottom: 8px; line-height: 1.15;
+  }
+  .article-content h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--white); margin: 20px 0 8px;
+    letter-spacing: 0.3px;
+  }
+  .article-content p { margin-bottom: 14px; }
+  .article-content .hook {
+    font-size: 15px; color: var(--white);
+    font-weight: 400;
+    border-left: 3px solid var(--red);
+    padding-left: 14px; margin-bottom: 20px;
+    line-height: 1.7;
+  }
+  .article-content a {
+    color: var(--accent); text-decoration: none;
+    border-bottom: 1px solid rgba(255,184,0,0.3);
+    transition: border-color 0.12s;
+  }
+  .article-content a:hover { border-bottom-color: var(--accent); }
+  .article-content .hashtags {
+    margin-top: 20px; font-size: 13px;
+    color: var(--blue); line-height: 2;
+  }
+
+  /* ═══ LINKEDIN PREVIEW ═══ */
+  .linkedin-preview {
+    background: #fff; border-radius: var(--radius);
+    overflow: hidden; color: #000;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+  }
+
+  .li-header {
+    padding: 16px 18px 12px;
+    display: flex; gap: 10px; align-items: flex-start;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .li-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 16px; color: white;
+    flex-shrink: 0;
+  }
+
+  .li-author-info { flex: 1; }
+  .li-author-name {
+    font-weight: 600; font-size: 14px; color: #000;
+  }
+  .li-author-title {
+    font-size: 12px; color: #666; line-height: 1.4;
+  }
+  .li-post-time { font-size: 11px; color: #999; margin-top: 2px; }
+
+  .li-body {
+    padding: 16px 18px;
+    font-size: 14px; line-height: 1.65;
+    color: #333; overflow-y: auto; flex: 1;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .li-body h1 { font-size: 20px; margin-bottom: 8px; color: #000; font-weight: 700; }
+  .li-body h2 { font-size: 16px; margin: 16px 0 6px; color: #000; font-weight: 600; }
+  .li-body p { margin-bottom: 12px; }
+  .li-body a { color: var(--blue); }
+  .li-body .hook {
+    border-left: 3px solid var(--red);
+    padding-left: 12px; color: #222;
+    font-size: 15px; margin-bottom: 16px;
+  }
+  .li-body .hashtags { color: var(--blue); font-size: 13px; }
+
+  .li-footer {
+    padding: 8px 18px 12px;
+    border-top: 1px solid #e8e8e8;
+    display: flex; gap: 24px;
+    font-size: 13px; color: #666; font-weight: 500;
+  }
+  .li-action { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .li-action:hover { color: #333; }
+
+  /* ═══ HISTORY DRAWER ═══ */
+  .history-toggle {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .history-panel {
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius);
+    margin-bottom: 18px; overflow: hidden;
+    max-height: 0; transition: max-height 0.3s ease;
+  }
+  .history-panel.open { max-height: 400px; }
+
+  .history-list { padding: 8px; overflow-y: auto; max-height: 380px; }
+
+  .history-item {
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background var(--transition);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .history-item:hover { background: rgba(255,255,255,0.03); }
+  .history-item:last-child { border-bottom: none; }
+
+  .history-date { font-size: 10px; color: var(--chrome); margin-bottom: 2px; }
+  .history-title { font-size: 13px; color: var(--chrome-light); font-weight: 500; }
+  .history-meta { font-size: 10px; color: var(--chrome); margin-top: 2px; }
+
+  /* ═══ LOADING ═══ */
+  .loading-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 300px; gap: 16px; color: var(--chrome);
+  }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,255,255,0.08);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  .loading-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse 1.5s ease infinite;
+  }
+
+  .loading-steps {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+  }
+  .loading-step {
+    font-size: 11px; color: var(--chrome);
+    display: flex; align-items: center; gap: 6px;
+    transition: color var(--transition);
+  }
+  .loading-step.active { color: var(--white); }
+  .loading-step.done { color: var(--success); }
+  .loading-step .step-icon { width: 14px; text-align: center; }
+
+  /* ═══ PROMPT LAB ═══ */
+  .prompt-section {
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius); overflow: hidden;
+  }
+
+  .prompt-header {
+    background: var(--steel-light);
+    padding: 12px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .prompt-textarea {
+    width: 100%; background: transparent;
+    border: none; color: var(--chrome-light);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px; line-height: 1.7;
+    padding: 18px; resize: vertical;
+    min-height: 180px;
+  }
+  .prompt-textarea:focus { outline: none; }
+
+  .version-list {
+    display: flex; gap: 6px;
+    padding: 10px 18px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    flex-wrap: wrap;
+  }
+
+  .version-chip {
+    background: var(--steel-light);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px; padding: 4px 10px;
+    font-size: 11px; color: var(--chrome);
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.8px; transition: all 0.12s;
+  }
+  .version-chip:hover { color: var(--white); border-color: var(--chrome); }
+  .version-chip.active { color: var(--white); border-color: var(--red); background: rgba(200,16,46,0.08); }
+
+  /* ═══ PROMPT STATS ═══ */
+  .prompt-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-top: 20px;
+  }
+  .stat-card {
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius);
+    padding: 14px 16px; text-align: center;
+  }
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900;
+    color: var(--white);
+  }
+  .stat-label {
+    font-size: 10px; color: var(--chrome);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ═══ EMPTY STATE ═══ */
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 400px; gap: 14px;
+    color: var(--chrome); text-align: center;
+  }
+
+  .empty-icon {
+    font-size: 40px; opacity: 0.25;
+    filter: grayscale(0.3);
+  }
+
+  .empty-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--chrome-light);
+  }
+  .empty-desc { font-size: 13px; max-width: 320px; line-height: 1.6; }
+
+  /* ═══ TOAST ═══ */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--steel-mid);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    padding: 10px 18px; border-radius: var(--radius);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px;
+    transform: translateY(60px); opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 999; display: flex; align-items: center; gap: 8px;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--error); }
+  .toast.info { border-left: 3px solid var(--blue); }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 1100px) {
+    .article-layout { grid-template-columns: 1fr; }
+    .linkedin-preview { max-height: 500px; }
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { max-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="logo-area">
+    <div class="logo-mark">M</div>
+    <div class="header-title">Magnus Content Studio</div>
+    <div class="header-badge">Beta</div>
+  </div>
+  <div class="header-right">
+    <div class="gen-counter">
+      <strong id="articleCount">0</strong> ARTICLES THIS MONTH
+    </div>
+    <div class="magnus-status">
+      <div class="status-dot"></div>
+      CONNECTED
+    </div>
+  </div>
+</header>
+
+<!-- ═══ LAYOUT ═══ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="section-label">Topic Override</div>
+      <textarea class="topic-input" id="topicOverride"
+        placeholder="Optional: paste specific news, event, or angle..."></textarea>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0;">
+      <div class="equipment-header">
+        <div class="section-label" style="margin-bottom:0">
+          Equipment <span class="count" id="equipTotalCount">199 items</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="equip-actions">
+            <button class="equip-action-btn" onclick="clearAll()">Clear</button>
+          </div>
+          <span class="selected-count" id="selectedCount">0</span>
+        </div>
+      </div>
+      <input type="text" class="search-input" id="equipSearch" placeholder="Filter equipment...">
+      <div class="equipment-list" id="equipmentList"></div>
+    </div>
+
+    <div class="generate-section">
+      <button class="btn-primary" id="generateBtn" onclick="generateSummaries()">
+        Generate Summaries
+      </button>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('summaries', this)">
+        Summaries
+        <span class="tab-badge" id="summaryBadge" style="display:none">0</span>
+      </div>
+      <div class="tab" onclick="switchTab('article', this)">Article</div>
+      <div class="tab" onclick="switchTab('prompt', this)">Prompt Lab</div>
+      <div class="tab" onclick="switchTab('history', this)">History</div>
+    </div>
+
+    <!-- SUMMARIES TAB -->
+    <div class="content" id="tab-summaries">
+      <div class="empty-state" id="emptySummaries">
+        <div class="empty-icon">M</div>
+        <div class="empty-title">Ready to Generate</div>
+        <div class="empty-desc">Select equipment, optionally set a topic, then generate. Magnus will research and return 3-5 article angles.</div>
+      </div>
+      <div id="summariesLoading" style="display:none">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <div class="loading-text">Magnus analyzing industry landscape...</div>
+          <div class="loading-steps">
+            <div class="loading-step active" id="step1"><span class="step-icon">...</span> Scanning industry news</div>
+            <div class="loading-step" id="step2"><span class="step-icon">...</span> Matching equipment angles</div>
+            <div class="loading-step" id="step3"><span class="step-icon">...</span> Generating summaries</div>
+          </div>
+        </div>
+      </div>
+      <div class="summaries-grid" id="summariesGrid" style="display:none"></div>
+    </div>
+
+    <!-- ARTICLE TAB -->
+    <div class="content" id="tab-article" style="display:none;padding:0;">
+      <div class="empty-state" id="emptyArticle" style="height:100%">
+        <div class="empty-icon">A</div>
+        <div class="empty-title">Select a Summary</div>
+        <div class="empty-desc">Choose an article angle from the Summaries tab. Magnus will write and preview it here.</div>
+      </div>
+
+      <div id="articleContainer" style="display:none;height:100%;padding:20px;">
+        <div class="article-layout" style="height:100%">
+          <!-- Editor -->
+          <div class="article-editor">
+            <div class="article-toolbar">
+              <div class="article-toolbar-title">Editor</div>
+              <div class="toolbar-actions">
+                <button class="btn-secondary" onclick="copyArticle()">Copy Text</button>
+                <button class="btn-secondary" onclick="copyMarkdown()">Markdown</button>
+              </div>
+            </div>
+            <div class="article-stats">
+              <span><strong id="wordCount">0</strong> words</span>
+              <span><strong id="readTime">0</strong> min read</span>
+              <span>Status: <strong id="articleStatus">Draft</strong></span>
+            </div>
+            <div class="article-body">
+              <div class="article-content" id="articleContent" contenteditable="true"></div>
+            </div>
+          </div>
+          <!-- LinkedIn Preview -->
+          <div class="linkedin-preview">
+            <div class="li-header">
+              <div class="li-avatar">B</div>
+              <div class="li-author-info">
+                <div class="li-author-name">Bunting Magnetics</div>
+                <div class="li-author-title">Leaders in Magnetic Separation, Metal Detection & Permanent Magnets</div>
+                <div class="li-post-time">Just now</div>
+              </div>
+            </div>
+            <div class="li-body" id="linkedinPreview"></div>
+            <div class="li-footer">
+              <div class="li-action">&#128077; Like</div>
+              <div class="li-action">&#128172; Comment</div>
+              <div class="li-action">&#8634; Repost</div>
+              <div class="li-action">&#9993; Send</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="loading-state" id="articleLoading" style="display:none">
+        <div class="spinner"></div>
+        <div class="loading-text">Magnus writing your article...</div>
+        <div class="loading-steps">
+          <div class="loading-step active" id="astep1"><span class="step-icon">...</span> Structuring narrative</div>
+          <div class="loading-step" id="astep2"><span class="step-icon">...</span> Writing sections</div>
+          <div class="loading-step" id="astep3"><span class="step-icon">...</span> Adding CTAs & links</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMPT LAB TAB -->
+    <div class="content" id="tab-prompt" style="display:none">
+      <div class="prompt-stats" id="promptStats">
+        <div class="stat-card">
+          <div class="stat-value" id="statArticles">0</div>
+          <div class="stat-label">Articles Generated</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statAvgRating">--</div>
+          <div class="stat-label">Avg Rating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statVersions">1</div>
+          <div class="stat-label">Prompt Versions</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="prompt-section">
+          <div class="prompt-header">
+            <div class="article-toolbar-title">System Prompt</div>
+            <div class="toolbar-actions">
+              <button class="btn-secondary" onclick="savePromptVersion()">Save Version</button>
+              <button class="btn-secondary" onclick="resetPrompt()">Reset</button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="systemPrompt"></textarea>
+          <div class="version-list" id="versionList"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="section-label" style="margin-bottom:10px">Performance Notes</div>
+        <textarea class="topic-input" id="performanceNotes" style="min-height:100px"
+          placeholder="What worked? What didn't? These notes help Magnus improve the prompt..."></textarea>
+        <div style="margin-top:10px">
+          <button class="btn-primary" onclick="improvePrompt()">Ask Magnus to Improve Prompt</button>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:14px;background:var(--accent-dim);border:1px solid rgba(255,184,0,0.12);border-radius:var(--radius);">
+        <div class="section-label" style="color:var(--accent);margin-bottom:8px">Improvement Suggestions</div>
+        <div id="promptSuggestions" style="font-size:13px;color:var(--chrome-light);line-height:1.7;">
+          Generate articles and rate them to populate improvement suggestions.
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="content" id="tab-history" style="display:none">
+      <div class="section-label" style="margin-bottom:14px">Past Generations</div>
+      <div id="historyList">
+        <div class="empty-state" style="height:300px">
+          <div class="empty-icon">H</div>
+          <div class="empty-title">No History Yet</div>
+          <div class="empty-desc">Generated articles will appear here, persisted across sessions.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// SUPABASE CLIENT
+// ════════════════════════════════════════════════
+const SUPABASE_URL = 'https://qzwxisdfwswsrbzvpzlo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6d3hpc2Rmd3N3c3JienZwemxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1OTg2NjYsImV4cCI6MjA1NDE3NDY2Nn0.nVV1d-_BfhfVNOSiusg8zSuvPwS4dSB-cJAMGVjujr4';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ════════════════════════════════════════════════
+// EQUIPMENT DATA
+// ════════════════════════════════════════════════
+const EQUIPMENT = {
+  "Magnetic Separation": [
+    "Plate Magnets","Drawer Magnets","Grate Magnets","Hump Magnets",
+    "Pneumatic Line Magnets","Liquid Line Magnets","Suspended Plate Magnets",
+    "Overhead Belt Magnets","Drum Magnets","Pulley Magnets",
+    "Induced Roll Separators","Cross-Belt Separators","Eddy Current Separators",
+    "Magnetic Wet Drum Separators","High Gradient Magnetic Separators",
+    "Rare Earth Grate Magnets","Rare Earth Plate Magnets","Rare Earth Drawer Magnets",
+    "Bullet Magnets","Pneumatic Hump Magnets"
+  ],
+  "Metal Detection": [
+    "Pipeline Metal Detectors","Conveyor Metal Detectors","Gravity-Feed Metal Detectors",
+    "Pharmaceutical Metal Detectors","Food-Grade Metal Detectors",
+    "Heavy Industry Metal Detectors","Profile Metal Detectors",
+    "Belt Metal Detectors","Throat Metal Detectors","Tunnel Metal Detectors"
+  ],
+  "Magnetic Products": [
+    "Alnico Magnets","Ceramic Ferrite Magnets","Samarium Cobalt Magnets",
+    "Neodymium (NdFeB) Magnets","Flexible Magnets","Bonded NdFeB Magnets",
+    "Compression Bonded Magnets","Injection Molded Magnets","Sintered NdFeB Magnets",
+    "Ring Magnets","Arc Magnets","Block Magnets","Disc Magnets",
+    "Rod Magnets","Custom Engineered Magnets"
+  ],
+  "Magnet Assemblies": [
+    "Magnetic Assemblies","Holding Magnets","Magnetic Sweepers",
+    "Lifting Magnets","Magnetic Chucks","Pot Magnets",
+    "Channel Magnets","Magnetic Hooks","Magnetic Base Assemblies",
+    "Speaker Magnets","Motor Magnets","Sensor Magnets",
+    "Actuator Magnets","Reed Switch Magnets","Encoder Magnets"
+  ],
+  "Automotive & Industrial": [
+    "EV Motor Magnets","Hybrid Motor Magnets","ABS Sensor Magnets",
+    "Power Steering Magnets","Starter Motor Magnets","Alternator Magnets",
+    "Fuel Injector Magnets","Throttle Position Sensor Magnets","Traction Motor Magnets",
+    "HVAC Motor Magnets","Industrial Servo Magnets","Stepper Motor Magnets",
+    "Brushless DC Motor Magnets","Magnetic Couplings","Magnetic Clutches"
+  ],
+  "Food & Pharma": [
+    "Food-Safe Drawer Magnets","Sanitary Plate Magnets","CIP-Compatible Magnets",
+    "HACCP-Compliant Separators","FDA-Compliant Magnetic Assemblies",
+    "3A-Certified Liquid Magnets","Pharmaceutical Grate Magnets",
+    "Nutraceutical Metal Detectors","Beverage Line Separators",
+    "Dairy Line Magnetic Separators"
+  ],
+  "Recycling & Mining": [
+    "Recycling Eddy Current Separators","Municipal Waste Separators",
+    "E-Waste Metal Recovery Systems","Mining Drum Separators",
+    "Aggregate Magnetic Separators","Iron Ore Separators",
+    "Coal Processing Magnets","Sand & Gravel Separators",
+    "Construction Debris Magnets","Glass Cullet Separators",
+    "Aluminum Separation Systems"
+  ],
+  "Automotive Magnets (Magnet Applications)": [
+    "Compression Bonded NdFeB \u2014 EV Traction Motors",
+    "ABS Wheel Speed Sensor Magnets",
+    "Electronic Power Steering (EPS) Magnets",
+    "Transmission Speed Sensor Magnets",
+    "Camshaft / Crankshaft Position Sensor Magnets",
+    "Electric Water Pump Motor Magnets",
+    "DC-DC Converter Magnets (48V Systems)",
+    "Door Latch & Actuator Magnets",
+    "ELV Rare Earth Recovery"
+  ],
+  "Motors & Drives (Magnet Applications)": [
+    "Brushless DC (BLDC) Motor Magnets",
+    "Permanent Magnet Synchronous Motor (PMSM) Magnets",
+    "Stepper Motor Magnets \u2014 Precision Positioning",
+    "Servo Motor Magnets \u2014 Robotics & CNC",
+    "Industrial Fan & Pump Motor Magnets",
+    "Compressor Motor Magnets \u2014 HVAC",
+    "Generator & Wind Turbine Magnets",
+    "Linear Motor Magnets \u2014 Conveyor / Automation",
+    "Drone Propulsion Motor Magnets",
+    "Cordless Power Tool Motor Magnets",
+    "Medical Device Motor Magnets"
+  ],
+  "Sensors & Electronics (Magnet Applications)": [
+    "Hall Effect Sensor Magnets","Reed Switch Trigger Magnets",
+    "Rotary Encoder Magnets","Magnetic Angle Position Sensors",
+    "Proximity & Door Sensor Magnets","MRI Gradient Coil Magnets",
+    "Speaker & Microphone Magnets","Smartphone Haptic Feedback Magnets",
+    "Wireless Charging Alignment Magnets"
+  ],
+  "Medical & Oil/Gas (Magnet Applications)": [
+    "MRI Machine Component Magnets","Surgical Robotics Actuator Magnets",
+    "Implantable Device Magnets","Lab Automation Instrument Magnets",
+    "Downhole Drilling Motor Magnets","Mud Motor Magnets",
+    "Flow Meter Magnets \u2014 Pipeline","Subsea Pump Motor Magnets",
+    "Valve Actuator Magnets"
+  ],
+  "Pumps & Consumer (Magnet Applications)": [
+    "Magnetic Drive Pump Couplings","Sealless Pump Rotor Magnets",
+    "Peristaltic Pump Drive Magnets","Centrifugal Pump Impeller Magnets",
+    "Appliance Motor Magnets","Power Tool & Garden Magnets",
+    "Smart Home Device Magnets","Fitness Equipment Motor Magnets"
+  ],
+  "Magnetizing Equipment": [
+    "Industrial Magnetizers","Bench-Top Magnetizers",
+    "Laboratory Magnetizers","Post-Assembly Magnetizing Fixtures",
+    "Multi-Pole Magnetizing Fixtures","Custom Magnetizing Coil Design",
+    "MagVault Stocking Program","Magnet Engineering Services",
+    "Magnetic Material Testing"
+  ],
+  "Bunting UK \u2014 Heavy Industrial": [
+    "Permanent Overband Magnets","ElectroMax Electromagnetic Overband",
+    "Oil-Cooled Electro Overband","Electro Suspension Magnets",
+    "Towable Electromagnetic Sweeper","ATEX-Approved Electromagnets",
+    "Large-Scale Electro Overband (Up to 13 Tons)",
+    "Drum + Eddy Current Separator Module"
+  ],
+  "Bunting UK \u2014 Mineral Processing": [
+    "Rare Earth Roll (RER) Separator","Magnetic Disc Separator",
+    "Wet High-Intensity Magnetic Separator (WHIMS)",
+    "ElectroStatic Separator","Electromagnetic Filter \u2014 Ceramics",
+    "Beach Sand Mineral Processing","Lithium-Ion Battery Material Separation",
+    "Mineral Processing Lab Testing"
+  ],
+  "Bunting UK \u2014 Recycling": [
+    "ElectroStatic Separator \u2014 Plastics","Aluminum Dross Processing",
+    "ELV Recycling Separation Systems","UPVC Recycling Separation",
+    "Wood Recycling Metal Separation","PCB Metal Recovery",
+    "Li-Ion Battery Recycling Systems","Laboratory Separation Test Equipment"
+  ],
+  "Bunting UK \u2014 Magnets & Assemblies": [
+    "Bespoke Magnet Assemblies","Industrial Magnetizers (HMI)",
+    "MagDev Soft Magnetic Components","Sintered NdFeB Custom Shapes",
+    "Samarium Cobalt High-Temp Assemblies","Wind Turbine Generator Assemblies",
+    "eMagnets Online Retail","ITAR / DFARS Certified Supply"
+  ]
+};
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let selectedItems = new Set();
+let summaries = [];
+let selectedSummaryIdx = -1;
+let currentArticleId = null;
+let promptVersions = [];
+let currentPromptIdx = 0;
+let collapsedCategories = new Set(Object.keys(EQUIPMENT)); // All collapsed by default
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  renderEquipmentList();
+  document.getElementById('equipSearch').addEventListener('input', renderEquipmentList);
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'g') { e.preventDefault(); generateSummaries(); }
+    if (e.ctrlKey && e.key === 'e') { e.preventDefault(); exportArticle(); }
+  });
+
+  // Load from Supabase
+  await Promise.all([loadPromptVersions(), loadArticleCount(), loadHistory()]);
+});
+
+// ════════════════════════════════════════════════
+// SUPABASE LOADERS
+// ════════════════════════════════════════════════
+async function loadPromptVersions() {
+  const { data, error } = await sb.from('magnus_prompt_versions')
+    .select('*').order('created_at', { ascending: true });
+  if (error || !data?.length) return;
+
+  promptVersions = data;
+  const active = data.find(v => v.is_active) || data[0];
+  currentPromptIdx = data.indexOf(active);
+  document.getElementById('systemPrompt').value = active.prompt_text;
+  renderVersionChips();
+  document.getElementById('statVersions').textContent = data.length;
+}
+
+async function loadArticleCount() {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0,0,0,0);
+
+  const { count } = await sb.from('magnus_articles')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', startOfMonth.toISOString());
+
+  document.getElementById('articleCount').textContent = count || 0;
+  document.getElementById('statArticles').textContent = count || 0;
+
+  // Avg rating
+  const { data: rated } = await sb.from('magnus_articles')
+    .select('rating').not('rating', 'is', null);
+
+  if (rated?.length) {
+    const avg = (rated.reduce((s, r) => s + r.rating, 0) / rated.length).toFixed(1);
+    document.getElementById('statAvgRating').textContent = avg;
+  }
+}
+
+async function loadHistory() {
+  const { data } = await sb.from('magnus_articles')
+    .select('id, headline, angle, audience, rating, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  const list = document.getElementById('historyList');
+  if (!data?.length) return;
+
+  list.innerHTML = '';
+  data.forEach((a, i) => {
+    const d = new Date(a.created_at);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const stars = a.rating ? '\u2605'.repeat(a.rating) + '\u2606'.repeat(5 - a.rating) : 'Unrated';
+    const el = document.createElement('div');
+    el.className = 'history-item fade-in';
+    el.style.animationDelay = `${i * 40}ms`;
+    el.innerHTML = `
+      <div class="history-date">${dateStr}</div>
+      <div class="history-title">${a.headline || 'Untitled'}</div>
+      <div class="history-meta">${a.angle} \u2022 ${a.audience} \u2022 ${stars} \u2022 ${a.status}</div>
+    `;
+    el.onclick = () => loadArticleFromHistory(a.id);
+    list.appendChild(el);
+  });
+}
+
+async function loadArticleFromHistory(id) {
+  const { data } = await sb.from('magnus_articles')
+    .select('*').eq('id', id).single();
+  if (!data) return;
+
+  currentArticleId = data.id;
+  document.getElementById('emptyArticle').style.display = 'none';
+  document.getElementById('articleContainer').style.display = 'block';
+  document.getElementById('articleLoading').style.display = 'none';
+  document.getElementById('articleContent').innerHTML = data.article_html || '';
+  document.getElementById('linkedinPreview').innerHTML = data.article_html || '';
+  updateArticleStats();
+  switchTab('article', document.querySelectorAll('.tab')[1]);
+}
+
+// ════════════════════════════════════════════════
+// EQUIPMENT LIST
+// ════════════════════════════════════════════════
+function renderEquipmentList() {
+  const search = document.getElementById('equipSearch').value.toLowerCase();
+  const list = document.getElementById('equipmentList');
+  list.innerHTML = '';
+  let totalItems = 0;
+
+  for (const [category, items] of Object.entries(EQUIPMENT)) {
+    const filtered = items.filter(i => i.toLowerCase().includes(search));
+    if (!filtered.length) continue;
+    totalItems += filtered.length;
+
+    const group = document.createElement('div');
+    const isCollapsed = search ? false : collapsedCategories.has(category);
+    group.className = 'category-group' + (isCollapsed ? ' collapsed' : '');
+
+    const selectedInCat = filtered.filter(i => selectedItems.has(i)).length;
+
+    group.innerHTML = `
+      <div class="category-header" onclick="toggleCategory('${category.replace(/'/g, "\\'")}', this)">
+        <div class="category-name">
+          ${category.replace(/[^\w\s\u2014&()\/]/g, '')}
+          <span class="category-count">${filtered.length}${selectedInCat ? ' \u2022 ' + selectedInCat + ' sel' : ''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="category-actions">
+            <span class="cat-sel-btn" onclick="event.stopPropagation();selectCategory('${category.replace(/'/g, "\\'")}')">All</span>
+            <span class="cat-sel-btn" onclick="event.stopPropagation();deselectCategory('${category.replace(/'/g, "\\'")}')">None</span>
+          </div>
+          <span class="category-chevron">\u25BC</span>
+        </div>
+      </div>
+      <div class="category-items"></div>
+    `;
+
+    const itemsContainer = group.querySelector('.category-items');
+    filtered.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'equip-item' + (selectedItems.has(item) ? ' selected' : '');
+      el.innerHTML = `<div class="equip-cb"></div><span>${item}</span>`;
+      el.onclick = () => toggleItem(item, el);
+      itemsContainer.appendChild(el);
+    });
+
+    list.appendChild(group);
+  }
+
+  document.getElementById('equipTotalCount').textContent = totalItems + ' items';
+}
+
+function toggleCategory(cat, el) {
+  if (collapsedCategories.has(cat)) collapsedCategories.delete(cat);
+  else collapsedCategories.add(cat);
+  el.closest('.category-group').classList.toggle('collapsed');
+}
+
+function selectCategory(cat) {
+  EQUIPMENT[cat]?.forEach(i => selectedItems.add(i));
+  updateSelectedCount();
+  renderEquipmentList();
+}
+
+function deselectCategory(cat) {
+  EQUIPMENT[cat]?.forEach(i => selectedItems.delete(i));
+  updateSelectedCount();
+  renderEquipmentList();
+}
+
+function toggleItem(item, el) {
+  if (selectedItems.has(item)) { selectedItems.delete(item); el.classList.remove('selected'); }
+  else { selectedItems.add(item); el.classList.add('selected'); }
+  updateSelectedCount();
+}
+
+function clearAll() {
+  selectedItems.clear();
+  updateSelectedCount();
+  renderEquipmentList();
+}
+
+function updateSelectedCount() {
+  document.getElementById('selectedCount').textContent = selectedItems.size ? selectedItems.size + ' selected' : '0';
+}
+
+// ════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['summaries', 'article', 'prompt', 'history'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? (t === 'article' ? 'block' : 'block') : 'none';
+  });
+}
+
+// ════════════════════════════════════════════════
+// GENERATE SUMMARIES
+// ════════════════════════════════════════════════
+async function generateSummaries() {
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  btn.classList.add('generating');
+
+  document.getElementById('emptySummaries').style.display = 'none';
+  document.getElementById('summariesGrid').style.display = 'none';
+  document.getElementById('summariesLoading').style.display = 'block';
+
+  // Switch to summaries tab
+  document.querySelectorAll('.tab')[0].click();
+
+  // Animate loading steps
+  const steps = [
+    document.getElementById('step1'),
+    document.getElementById('step2'),
+    document.getElementById('step3')
+  ];
+  steps[0].classList.add('active');
+
+  const topic = document.getElementById('topicOverride').value;
+  const selected = [...selectedItems];
+  const prompt = document.getElementById('systemPrompt').value;
+
+  try {
+    setTimeout(() => { steps[0].classList.add('done'); steps[0].querySelector('.step-icon').textContent = '\u2713'; steps[1].classList.add('active'); }, 2000);
+    setTimeout(() => { steps[1].classList.add('done'); steps[1].querySelector('.step-icon').textContent = '\u2713'; steps[2].classList.add('active'); }, 4000);
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/magnus-generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ topic, equipment: selected, prompt_text: prompt }),
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    summaries = Array.isArray(data) ? data : [];
+    if (!summaries.length) throw new Error('No summaries returned');
+
+    steps[2].classList.add('done');
+    steps[2].querySelector('.step-icon').textContent = '\u2713';
+    await delay(400);
+
+    renderSummaries();
+    document.getElementById('summaryBadge').style.display = 'block';
+    document.getElementById('summaryBadge').textContent = summaries.length;
+    showToast('success', `${summaries.length} summaries generated`);
+  } catch (err) {
+    showToast('error', 'Generation failed: ' + err.message);
+    document.getElementById('emptySummaries').style.display = 'flex';
+  } finally {
+    document.getElementById('summariesLoading').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Generate Summaries';
+    btn.classList.remove('generating');
+  }
+}
+
+function renderSummaries() {
+  const grid = document.getElementById('summariesGrid');
+  grid.innerHTML = '';
+  grid.style.display = 'flex';
+
+  summaries.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'summary-card fade-in';
+    card.style.animationDelay = `${i * 80}ms`;
+    card.id = `summary-${i}`;
+
+    const tags = (s.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="summary-meta">
+        <span class="summary-angle">${s.angle || ''}</span>
+        <span class="summary-audience">\u2192 ${s.audience || ''}</span>
+      </div>
+      <div class="summary-headline">${s.headline || ''}</div>
+      <div class="summary-body">${s.body || ''}</div>
+      <div class="summary-footer">
+        ${tags}
+        <div class="summary-actions">
+          <button class="select-btn" onclick="event.stopPropagation();selectSummary(${i})">Write Article \u2192</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ════════════════════════════════════════════════
+// WRITE ARTICLE
+// ════════════════════════════════════════════════
+async function selectSummary(idx) {
+  selectedSummaryIdx = idx;
+  document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`summary-${idx}`).classList.add('selected');
+
+  // Switch to article tab
+  switchTab('article', document.querySelectorAll('.tab')[1]);
+
+  document.getElementById('emptyArticle').style.display = 'none';
+  document.getElementById('articleContainer').style.display = 'none';
+  document.getElementById('articleLoading').style.display = 'flex';
+
+  const s = summaries[idx];
+  const prompt = document.getElementById('systemPrompt').value;
+
+  // Animate steps
+  const steps = [
+    document.getElementById('astep1'),
+    document.getElementById('astep2'),
+    document.getElementById('astep3')
+  ];
+  steps.forEach(st => { st.classList.remove('active', 'done'); st.querySelector('.step-icon').textContent = '...'; });
+  steps[0].classList.add('active');
+
+  try {
+    setTimeout(() => { steps[0].classList.add('done'); steps[0].querySelector('.step-icon').textContent = '\u2713'; steps[1].classList.add('active'); }, 2500);
+    setTimeout(() => { steps[1].classList.add('done'); steps[1].querySelector('.step-icon').textContent = '\u2713'; steps[2].classList.add('active'); }, 5000);
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/magnus-write-article`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        summary: s,
+        equipment: [...selectedItems],
+        prompt_text: prompt,
+      }),
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    currentArticleId = data.article_id;
+    const html = data.html || '';
+
+    steps[2].classList.add('done');
+    steps[2].querySelector('.step-icon').textContent = '\u2713';
+    await delay(300);
+
+    document.getElementById('articleLoading').style.display = 'none';
+    document.getElementById('articleContainer').style.display = 'block';
+    document.getElementById('articleContent').innerHTML = html;
+    document.getElementById('linkedinPreview').innerHTML = html;
+    updateArticleStats();
+
+    // Update counts
+    loadArticleCount();
+    showToast('success', 'Article written and saved');
+  } catch (err) {
+    document.getElementById('articleLoading').style.display = 'none';
+    document.getElementById('emptyArticle').style.display = 'flex';
+    showToast('error', 'Article generation failed: ' + err.message);
+  }
+}
+
+function updateArticleStats() {
+  const text = document.getElementById('articleContent').innerText;
+  const words = text.trim().split(/\s+/).filter(w => w).length;
+  document.getElementById('wordCount').textContent = words;
+  document.getElementById('readTime').textContent = Math.max(1, Math.round(words / 200));
+}
+
+// Sync editor to preview
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'articleContent') {
+    document.getElementById('linkedinPreview').innerHTML = e.target.innerHTML;
+    updateArticleStats();
+  }
+});
+
+// ════════════════════════════════════════════════
+// ARTICLE ACTIONS
+// ════════════════════════════════════════════════
+function copyArticle() {
+  const text = document.getElementById('articleContent').innerText;
+  navigator.clipboard.writeText(text);
+  showToast('success', 'Copied to clipboard');
+}
+
+function copyMarkdown() {
+  const html = document.getElementById('articleContent').innerHTML;
+  // Simple HTML to markdown
+  let md = html
+    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
+    .replace(/<div class="hook">(.*?)<\/div>/gi, '> $1\n\n')
+    .replace(/<a href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+    .replace(/<div class="hashtags">(.*?)<\/div>/gi, '\n$1\n')
+    .replace(/<p>(.*?)<\/p>/gi, '$1\n\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  navigator.clipboard.writeText(md);
+  showToast('success', 'Markdown copied');
+}
+
+function exportArticle() {
+  const html = document.getElementById('articleContent').innerHTML;
+  const blob = new Blob([`<html><head><style>body{font-family:-apple-system,sans-serif;max-width:700px;margin:40px auto;line-height:1.7;color:#333}h1{font-size:28px}h2{font-size:20px;margin-top:24px}.hook{border-left:3px solid #C8102E;padding-left:14px;font-size:17px;color:#222;margin-bottom:20px}a{color:#5b86e5}.hashtags{color:#5b86e5;margin-top:20px}</style></head><body>${html}</body></html>`], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bunting-article-${Date.now()}.html`;
+  a.click();
+  showToast('info', 'Article exported');
+}
+
+// ════════════════════════════════════════════════
+// RATING
+// ════════════════════════════════════════════════
+async function rateArticle(rating) {
+  if (!currentArticleId) return;
+  await sb.from('magnus_articles').update({ rating }).eq('id', currentArticleId);
+  await sb.from('magnus_feedback').insert({ article_id: currentArticleId, rating });
+  showToast('success', `Rated ${rating}/5`);
+  loadArticleCount();
+}
+
+// ════════════════════════════════════════════════
+// PROMPT LAB
+// ════════════════════════════════════════════════
+function renderVersionChips() {
+  const list = document.getElementById('versionList');
+  list.innerHTML = '';
+  promptVersions.forEach((v, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'version-chip' + (i === currentPromptIdx ? ' active' : '');
+    chip.textContent = v.label;
+    chip.onclick = () => loadVersion(i, chip);
+    list.appendChild(chip);
+  });
+}
+
+function loadVersion(idx, el) {
+  currentPromptIdx = idx;
+  document.getElementById('systemPrompt').value = promptVersions[idx].prompt_text;
+  document.querySelectorAll('.version-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function savePromptVersion() {
+  const text = document.getElementById('systemPrompt').value;
+  const n = promptVersions.length + 1;
+  const label = `v${n} \u2014 Custom`;
+
+  // Deactivate all, activate new
+  await sb.from('magnus_prompt_versions').update({ is_active: false }).eq('is_active', true);
+
+  const { data, error } = await sb.from('magnus_prompt_versions').insert({
+    label, prompt_text: text, is_active: true,
+  }).select().single();
+
+  if (error) { showToast('error', 'Save failed'); return; }
+
+  promptVersions.push(data);
+  currentPromptIdx = promptVersions.length - 1;
+  renderVersionChips();
+  document.getElementById('statVersions').textContent = promptVersions.length;
+  showToast('success', `Prompt ${label} saved`);
+}
+
+function resetPrompt() {
+  const defaultV = promptVersions.find(v => v.label.includes('Default')) || promptVersions[0];
+  if (defaultV) {
+    document.getElementById('systemPrompt').value = defaultV.prompt_text;
+    showToast('info', 'Reset to default');
+  }
+}
+
+async function improvePrompt() {
+  const notes = document.getElementById('performanceNotes').value;
+  const currentPrompt = document.getElementById('systemPrompt').value;
+  const suggestions = document.getElementById('promptSuggestions');
+
+  suggestions.innerHTML = '<div class="loading-text" style="font-size:12px">Magnus analyzing prompt performance...</div>';
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/magnus-improve-prompt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ current_prompt: currentPrompt, notes }),
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // Convert newlines to <br> for display
+    suggestions.innerHTML = (data.suggestions || 'No suggestions returned.')
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent)">$1</strong>');
+
+    showToast('success', 'Prompt suggestions ready');
+  } catch (err) {
+    suggestions.innerHTML = 'Failed: ' + err.message;
+    showToast('error', 'Prompt improvement failed');
+  }
+}
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(type, msg) {
+  const t = document.getElementById('toast');
+  t.className = 'toast ' + type;
+  const icons = { success: '\u2713', error: '\u2717', info: '\u2139' };
+  t.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
